@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Arquivos - Converta seus documentos facilmente</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/static/css/styles.css}">
+
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .main-container {
+            padding: 2rem 0;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1.5rem;
+        }
+
+        .upload-area {
+            border: 3px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background-color: #f8fafc;
+        }
+
+        .upload-area:hover,
+        .upload-area.drag-over {
+            border-color: var(--primary-color);
+            background-color: #f1f5f9;
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .format-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .format-option {
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .format-option:hover {
+            border-color: var(--primary-color);
+            background-color: #f8fafc;
+        }
+
+        .format-option.selected {
+            border-color: var(--primary-color);
+            background-color: #eef2ff;
+        }
+
+        .result-container {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: #f0fdf4;
+            border-radius: 10px;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .error-container {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: #fef2f2;
+            border-radius: 10px;
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .loading-spinner {
+            display: none;
+        }
+
+        .file-info {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #eff6ff;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-transparent">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">
+            <i class="bi bi-file-earmark-arrow-up"></i> Conversor de Arquivos
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/">Início</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/conversions">Conversões</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/about">Sobre</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="container main-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h2 class="mb-2">
+                        <i class="bi bi-arrow-left-right"></i>
+                        Conversor de Arquivos Online
+                    </h2>
+                    <p class="mb-0">Converta seus documentos de forma rápida e segura</p>
+                </div>
+                <div class="card-body p-4">
+
+                    <!-- Upload Area -->
+                    <div class="upload-area" id="uploadArea">
+                        <i class="bi bi-cloud-upload upload-icon"></i>
+                        <h4>Arraste e solte seu arquivo aqui</h4>
+                        <p class="text-muted">ou clique para selecionar</p>
+                        <input type="file" id="fileInput" class="d-none" accept=".pdf,.docx,.doc,.txt,.jpg,.jpeg,.png">
+                        <button class="btn btn-primary mt-3" onclick="document.getElementById('fileInput').click()">
+                            <i class="bi bi-folder2-open"></i> Escolher Arquivo
+                        </button>
+                    </div>
+
+                    <!-- File Info -->
+                    <div class="file-info" id="fileInfo">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-file-earmark-text text-primary"></i>
+                                <span id="fileName" class="fw-bold ms-2"></span>
+                                <span id="fileSize" class="text-muted ms-2"></span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="clearFile()">
+                                <i class="bi bi-x-circle"></i> Remover
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Format Selector -->
+                    <div id="formatSelectorContainer" style="display: none;">
+                        <h5 class="mt-4 mb-3">Selecione o formato de destino:</h5>
+                        <div class="format-selector" id="formatSelector">
+                            <!-- Formatos serão adicionados dinamicamente -->
+                        </div>
+
+                        <!-- Convert Button -->
+                        <div class="text-center mt-4">
+                            <button class="btn btn-primary btn-lg" id="convertBtn" onclick="convertFile()" disabled>
+                                <i class="bi bi-arrow-repeat"></i> Converter Arquivo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loading Spinner -->
+                    <div class="text-center loading-spinner" id="loadingSpinner">
+                        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                            <span class="visually-hidden">Convertendo...</span>
+                        </div>
+                        <p class="mt-3 fw-bold">Convertendo seu arquivo...</p>
+                    </div>
+
+                    <!-- Result Container -->
+                    <div class="result-container" id="resultContainer" style="display: none;">
+                        <h5 class="text-success">
+                            <i class="bi bi-check-circle-fill"></i> Conversão Concluída!
+                        </h5>
+                        <p class="mb-3" id="resultMessage"></p>
+                        <a href="#" id="downloadLink" class="btn btn-success">
+                            <i class="bi bi-download"></i> Baixar Arquivo Convertido
+                        </a>
+                    </div>
+
+                    <!-- Error Container -->
+                    <div class="error-container" id="errorContainer" style="display: none;">
+                        <h5 class="text-danger">
+                            <i class="bi bi-exclamation-triangle-fill"></i> Erro na Conversão
+                        </h5>
+                        <p class="mb-0" id="errorMessage"></p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div class="row mt-5 text-white">
+                <div class="col-md-4 text-center mb-4">
+                    <i class="bi bi-lightning-charge" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">Rápido e Eficiente</h4>
+                    <p>Conversão em segundos com alta qualidade</p>
+                </div>
+                <div class="col-md-4 text-center mb-4">
+                    <i class="bi bi-shield-check" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">Seguro</h4>
+                    <p>Seus arquivos são processados com segurança</p>
+                </div>
+                <div class="col-md-4 text-center mb-4">
+                    <i class="bi bi-file-earmark-check" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">Múltiplos Formatos</h4>
+                    <p>Suporte para diversos formatos de arquivo</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Custom JS -->
+<script>
+    let selectedFile = null;
+    let selectedFormat = null;
+
+    const formatIcons = {
+        'PDF': 'bi-file-pdf',
+        'DOCX': 'bi-file-word',
+        'DOC': 'bi-file-word',
+        'TXT': 'bi-file-text',
+        'JPG': 'bi-file-image',
+        'PNG': 'bi-file-image',
+        'XLSX': 'bi-file-excel',
+        'XLS': 'bi-file-excel'
+    };
+
+    const availableConversions = {
+        'PDF': ['DOCX', 'TXT', 'JPG', 'PNG'],
+        'DOCX': ['PDF', 'TXT'],
+        'TXT': ['PDF'],
+        'JPG': ['PDF', 'PNG'],
+        'PNG': ['PDF', 'JPG']
+    };
+
+    // File input change handler
+    document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+    // Drag and drop handlers
+    const uploadArea = document.getElementById('uploadArea');
+
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('drag-over');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            handleFile(file);
+        }
+    }
+
+    function handleFile(file) {
+        selectedFile = file;
+
+        // Show file info
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        document.getElementById('fileInfo').style.display = 'block';
+
+        // Determine source format
+        const extension = file.name.split('.').pop().toUpperCase();
+
+        // Show available formats
+        showAvailableFormats(extension);
+    }
+
+    function showAvailableFormats(sourceFormat) {
+        const formatSelector = document.getElementById('formatSelector');
+        formatSelector.innerHTML = '';
+
+        const availableFormats = availableConversions[sourceFormat] || [];
+
+        if (availableFormats.length === 0) {
+            formatSelector.innerHTML = '<p class="text-danger">Formato de arquivo não suportado para conversão.</p>';
+            document.getElementById('formatSelectorContainer').style.display = 'block';
+            return;
+        }
+
+        availableFormats.forEach(format => {
+            const formatOption = document.createElement('div');
+            formatOption.className = 'format-option';
+            formatOption.innerHTML = `
+                <i class="bi ${formatIcons[format]} fs-2 text-primary"></i>
+                <p class="mb-0 mt-2 fw-bold">${format}</p>
+            `;
+            formatOption.onclick = () => selectFormat(format, formatOption);
+            formatSelector.appendChild(formatOption);
+        });
+
+        document.getElementById('formatSelectorContainer').style.display = 'block';
+    }
+
+    function selectFormat(format, element) {
+        selectedFormat = format;
+
+        // Remove selection from all options
+        document.querySelectorAll('.format-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+
+        // Add selection to clicked option
+        element.classList.add('selected');
+
+        // Enable convert button
+        document.getElementById('convertBtn').disabled = false;
+    }
+
+    function convertFile() {
+        if (!selectedFile || !selectedFormat) {
+            alert('Por favor, selecione um arquivo e um formato de destino.');
+            return;
+        }
+
+        // Hide previous results
+        document.getElementById('resultContainer').style.display = 'none';
+        document.getElementById('errorContainer').style.display = 'none';
+
+        // Show loading
+        document.getElementById('loadingSpinner').style.display = 'block';
+
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('targetFormat', selectedFormat);
+
+        // Send request
+        fetch('/api/files/convert', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loadingSpinner').style.display = 'none';
+
+            if (data.success) {
+                showSuccess(data);
+            } else {
+                showError(data.message);
+            }
+        })
+        .catch(error => {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            showError('Erro ao converter arquivo: ' + error.message);
+        });
+    }
+
+    function showSuccess(data) {
+        document.getElementById('resultMessage').textContent =
+            `Arquivo ${data.originalFilename} convertido com sucesso para ${selectedFormat}!`;
+        document.getElementById('downloadLink').href = data.downloadUrl;
+        document.getElementById('resultContainer').style.display = 'block';
+    }
+
+    function showError(message) {
+        document.getElementById('errorMessage').textContent = message;
+        document.getElementById('errorContainer').style.display = 'block';
+    }
+
+    function clearFile() {
+        selectedFile = null;
+        selectedFormat = null;
+        document.getElementById('fileInput').value = '';
+        document.getElementById('fileInfo').style.display = 'none';
+        document.getElementById('formatSelectorContainer').style.display = 'none';
+        document.getElementById('resultContainer').style.display = 'none';
+        document.getElementById('errorContainer').style.display = 'none';
+        document.getElementById('convertBtn').disabled = true;
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+</script>
+
+</body>
+</html>

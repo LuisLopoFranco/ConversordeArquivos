@@ -1,0 +1,31 @@
+/**
+ * Estilos customizados para o Conversor de Arquivos
+ *
+ * Este arquivo pode ser usado para adicionar estilos personalizados
+ * além dos estilos inline já definidos nas páginas.
+ */
+
+/* Estilos globais */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Animações customizadas */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Estilos adicionais podem ser adicionados aqui */
